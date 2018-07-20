@@ -1,0 +1,79 @@
+enum Flagstatus{
+    parseError = -1,
+    normal = 0,
+    greatter = 1
+}
+
+struct logString{
+    public double error;
+    public double CT;
+    public string avi;
+    public Flagstatus flag; //true presents normal, false
+}
+
+List<logString> parseString(string log)
+{
+    List<logString> logStrings = new List<logString>();
+
+    string[] logs = log.Split(';');
+
+    List<double> error = new List<double>();
+
+    for(int i = 0; i < logs.Length / 3; i += 3)
+    {
+        logString temp = new logString { };
+        try
+        {
+            temp.error = Double.Parse(logs[i]);
+            error.Add(Double.Parse(logs[i]));
+            temp.CT = Double.Parse(logs[i + 1]);
+            temp.avi = logs[i + 2];
+            temp.flag = Flagstatus.normal;
+            logStrings.Add(temp);
+        }
+        catch
+        {
+            temp.flag = Flagstatus.parseError;
+            continue;
+        }
+    }
+
+    double Median = getMedian(error);
+    double Variance = getVariance(error);
+
+    for(int i = 0; i < logStrings.Count; i++)
+    {
+        if (logStrings[i].error >= (Median + Variance))
+        {
+            logString temp = logStrings[i];
+            temp.flag = Flagstatus.greatter;
+            logStrings[i] = temp;
+        }
+    }
+
+    return logStrings;
+}
+
+private double getVariance(List<double> error)
+{
+    double average = error.Average();
+    double sum = 0;
+    for(int i = 0; i < error.Count; i++)
+    {
+        sum += (error[i] - average) * (error[i] - average);
+    }
+    return sum;
+}
+
+private double getMedian(List<double> error)
+{
+    error.Sort();
+    if(error.Count % 2 == 1)
+    {
+        return error[(error.Count - 1) / 2];
+    }
+    else
+    {
+        return (error[error.Count / 2] + error[error.Count / 2 - 1]) / 2;
+    }
+}
